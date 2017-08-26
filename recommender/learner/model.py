@@ -3,7 +3,7 @@ from typing import Callable
 import tensorflow as tf
 
 
-class Learner:
+class LearnerModel:
     """A learner for training over the model."""
 
     def __init__(self,
@@ -120,6 +120,7 @@ class Learner:
         self.__graph_built__ = True
 
     def initialize(self):
+        """Initialize the global variables of the graph"""
         tf.global_variables_initializer()
 
     def save(self, file: str):
@@ -137,3 +138,6 @@ class Learner:
 
     def predict(self, batch):
         pass
+
+    def close(self):
+        self.sess.close()
