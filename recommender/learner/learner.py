@@ -67,7 +67,7 @@ class Learner:
         if not self.__graph_built__:
             self.build_graph()
         cross_entropy = tf.reduce_mean(
-            tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=self.__final_layer__))
+            tf.nn.softmax_cross_entropy_with_logits(labels=self.y, logits=self.__final_layer__))
         train_step = tf.train.GradientDescentOptimizer(
             0.5).minimize(cross_entropy)
         train_step.run(feed_dict={self.X: batch, self.y: y})
@@ -91,12 +91,12 @@ class Learner:
         self.X = tf.placeholder(dtype=tf.float32, shape=(None, 1024), name="X")
 
         # Batch size
-        batch_size = tf.shape(X)[0]
+        batch_size = tf.shape(self.X)[0]
 
         # Target outputs of our model
         self.y = tf.placeholder(dtype=tf.float32, shape=(None, 1), name="y")
 
-        conv1 = tf.nn.conv1d(X, filters=32, stride=10,
+        conv1 = tf.nn.conv1d(self.X, filters=32, stride=10,
                              padding="SAME", name="conv1")
 
         maxpool1 = tf.nn.max_pool(conv1, ksize=[batch_size, 1, 1024, 1], strides=[
