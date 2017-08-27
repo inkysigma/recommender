@@ -4,5 +4,8 @@ env/**
 
 
 **/__pycache__/**
+dist/**
+build/**
+recommender.egg-info/**
 
 *.ini
