@@ -12,8 +12,8 @@ def add_tensors(arr: List[tf.Tensor]):
         tf.Tensor: a tensor representing the sum of the tensors
     """
     final = arr[0]
-    for i, item in enumerate(arr, 1):
-        final = final + arr[i]
+    for _, item in enumerate(arr, 1):
+        final = final + item
     return final
 
 
