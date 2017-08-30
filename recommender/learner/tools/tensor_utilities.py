@@ -38,12 +38,12 @@ def list_to_sparse(mapping: List[str], targets: List[str], consistent=True) -> L
         tensors.append(tf.SparseTensor(
             indices=[[sorted_mapping.index(i) for i in sorted_mapping]],
             values=[1 for i in range(len(targets))],
-            dense_shape=[len(sorted_mapping)]))
+            dense_shape=[output_size]))
     return tensors
 
 def concat_sp_tensors_1D(tensors: List[tf.Tensor]) -> tf.Tensor:
     """
-    Concatenates a list of 1D tensors along the y-axis
+    Concatenates a list of 1D sparse tensors along the x-axis
     Args:
         tensors (List[tf.Tensor]): the list of tensors to concatenate
     Returns:

@@ -1,9 +1,8 @@
 """Tests on the tensor utilities module"""
-import recommender.learner.tools.tensor_utilities as util
-import tensorflow as tf
 import unittest
 import random
-
+import recommender.learner.tools.tensor_utilities as util
+import tensorflow as tf
 
 class TensorUtilityTest(unittest.TestCase):
     def test_concat_1d(self):
