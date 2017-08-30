@@ -1,14 +1,16 @@
 """Entry point of recommender application"""
 import argparse
+from recommender.learner.model import LearnerModel
 
 
-def configure(*files: str) -> (argparse.Namespace, dict):
+def configure(*files: str) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     learner_parser = parser.add_subparsers(
         help="Select an option to either train/test/predict.")
 
     training_parser = learner_parser.add_parser("train")
     training_parser.set_defaults(method="train")
+    training_parser.add_argument("--use-gpu", action="store_true")
 
     test_parser = learner_parser.add_parser("test")
     test_parser.set_defaults(method="test")
@@ -16,9 +18,9 @@ def configure(*files: str) -> (argparse.Namespace, dict):
     predict_parser = learner_parser.add_parser("predict")
     predict_parser.set_defaults(method="predict")
 
-    flags = parser.parse_args()
+    namespace = parser.parse_args()
 
-    return flags, None
+    return namespace
 
 
 def main(flags):
@@ -27,6 +29,5 @@ def main(flags):
 
 
 if __name__ == "__main__":
-    flags, file_config = configure()
-    print(flags)
-    main(flags)
+    FLAGS = configure()
+    main(FLAGS)
