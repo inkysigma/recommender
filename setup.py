@@ -3,7 +3,6 @@ from setuptools import setup
 
 INSTALL_REQUIRES = [
     "tensorflow",
-    "tensorboard"
     "spotipy",
     "numpy",
     "pyramid"

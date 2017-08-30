@@ -1,5 +1,6 @@
 """Entry point of recommender application"""
 import argparse
+from recommender.learner.model import LearnerModel
 
 
 def configure(*files: str) -> argparse.Namespace:
@@ -14,6 +15,7 @@ def configure(*files: str) -> argparse.Namespace:
 
     training_parser = learner_parser.add_parser("train")
     training_parser.set_defaults(method="train")
+    training_parser.add_argument("--use-gpu", action="store_true")
 
     # TODO: Add methods to build the model like turning on GPU support.
     # Creating GPU groups and using them
@@ -28,9 +30,9 @@ def configure(*files: str) -> argparse.Namespace:
     manage_parser = learner_parser.add_parser("manage")
     manage_parser.set_defaults(method="manage")
 
-    flags = parser.parse_args()
+    namespace = parser.parse_args()
 
-    return flags, None
+    return namespace
 
 
 def main(flags):
@@ -39,6 +41,5 @@ def main(flags):
 
 
 if __name__ == "__main__":
-    flags, file_config = configure()
-    print(flags)
-    main(flags)
+    FLAGS = configure()
+    main(FLAGS)
