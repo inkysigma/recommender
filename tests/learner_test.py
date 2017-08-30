@@ -28,7 +28,7 @@ class TestPredictor(unittest.TestCase):
 
     def test_train(self):
         """Test whether the model can be trained"""
-        for i in range(1, 20):
+        for _ in range(1, 20):
             self.model.train(np.zeros([1, 2048, 32]), np.zeros([1, 10]))
 
     def test_flush(self):
@@ -43,7 +43,7 @@ class TestPredictor(unittest.TestCase):
         print("Ensure that the second result is smaller than the first")
         result = self.model.predict(np.zeros([1, 2048, 32]))
         print(result)
-        for i in range(1, 20):
+        for _ in range(1, 20):
             self.model.train(np.zeros([10, 2048, 32]), np.zeros([10, 10]))
         result = self.model.predict(np.zeros([1, 2048, 32]))
         print(result)
