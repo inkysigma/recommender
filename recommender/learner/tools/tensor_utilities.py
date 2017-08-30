@@ -49,4 +49,4 @@ def concat_tensors_1D(tensors: List[tf.Tensor]) -> tf.Tensor:
     Returns:
         tf.Tensor:
     """
-    return tf.concat(tensors, axis=1)
+    return tf.concat(tensors, axis=0)
