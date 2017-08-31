@@ -28,12 +28,12 @@ class TestPredictor(unittest.TestCase):
 
     def test_train(self):
         """Test whether the model can be trained"""
-        for i in range(1, 20):
-            self.model.train(np.zeros([1, 1024, 1]), np.zeros([1, 10]))
+        for _ in range(1, 20):
+            self.model.train(np.zeros([1, 2048, 32]), np.zeros([1, 10]))
 
     def test_flush(self):
         """Test whether the graph can be run with a zero array"""
-        result = self.model.predict(np.zeros([1, 1024, 1]))
+        result = self.model.predict(np.zeros([1, 2048, 32]))
         print(result)
 
     def test_predict(self):
@@ -41,11 +41,11 @@ class TestPredictor(unittest.TestCase):
         print()
         print("Testing the prediction:")
         print("Ensure that the second result is smaller than the first")
-        result = self.model.predict(np.zeros([1, 1024, 1]))
+        result = self.model.predict(np.zeros([1, 2048, 32]))
         print(result)
-        for i in range(1, 20):
-            self.model.train(np.zeros([10, 1024, 1]), np.zeros([10, 10]))
-        result = self.model.predict(np.zeros([1, 1024, 1]))
+        for _ in range(1, 20):
+            self.model.train(np.zeros([10, 2048, 32]), np.zeros([10, 10]))
+        result = self.model.predict(np.zeros([1, 2048, 32]))
         print(result)
 
     def tearDown(self):

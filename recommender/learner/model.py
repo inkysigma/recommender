@@ -12,7 +12,9 @@ class LearnerModel:
                  categories: int,
                  activation_function: Callable[[tf.Tensor], tf.Tensor]=tf.nn.relu,
                  beta: float = 0.01,
-                 name: str = "track-learner"):
+                 name: str = "track-learner",
+                 frames: int = 2048,
+                 channels: int = 32):
         """
         Creates a learner with the given activation function and name.
         Args:
@@ -38,6 +40,9 @@ class LearnerModel:
         # Specify that the graph is unbuilt
         self.__graph_built__ = False
 
+        self.__frames__ = frames
+        self.__channels__ = channels
+
         # Create a system of weights and biases
         self.__initialize_variables__()
 
@@ -45,10 +50,20 @@ class LearnerModel:
 
         self.__beta__ = beta
 
+        # Initialize inputs to the system
+
+        # Inputs to our models
+        self.input = tf.placeholder(
+            dtype=tf.float32, shape=(None, self.__frames__, channels), name="X")
+
+        # Target outputs of our model
+        self.y = tf.placeholder(dtype=tf.float32, shape=(
+            None, self.__categories__), name="y")
+
     def __initialize_variables__(self):
         """Initialize the variables needed to multiply matricies and add biases"""
         self.__weights__ = [
-            self.__create_weight__([1024, 512]),
+            self.__create_weight__([self.__frames__, 512]),
             self.__create_weight__([512, 256]),
             self.__create_weight__([256, 128]),
             self.__create_weight__([128, 64]),
@@ -63,12 +78,26 @@ class LearnerModel:
         ]
 
     def __create_weight__(self, shape, name: str=None):
+        """
+        Create a weight of the given shape and name
+        Args:
+            shape: an n-dimensional list of integers representing the shape
+            name: the name of the operation to process
+        """
         return tf.Variable(tf.truncated_normal(shape=shape, stddev=0.1), name=name)
 
     def __create_bias__(self, shape, name: str=None):
         return tf.Variable(tf.constant(0.2, shape=shape), name=name)
 
     def train(self, batch, y):
+        """
+        Train the model given a batch and a set of y.
+        Args:
+            batch (tf.Tensor): a batch representing the possible input.
+                Should have size [batch_size, frames, channels]
+            y (tf.Tensor): a tensor representing the taget outputs.
+                Should have size [batch_size, categories]
+        """
         if not self.__graph_built__:
             self.build_graph()
         cross_entropy = tf.reduce_mean(
@@ -95,22 +124,12 @@ class LearnerModel:
         Builds the variables in the graph. Should be called before running.
         """
 
-        # Inputs to our models
-        self.input = tf.placeholder(
-            dtype=tf.float32, shape=(None, 1024, 1), name="X")
-
-        # Batch size
-        batch_size = tf.shape(self.input)[0]
-
-        # Target outputs of our model
-        self.y = tf.placeholder(dtype=tf.float32, shape=(
-            None, self.__categories__), name="y")
-
-        conv1 = tf.layers.conv1d(self.input, filters=16, strides=1, kernel_size=4,
+        conv1 = tf.layers.conv1d(self.input, filters=32, strides=1, kernel_size=4,
                                  padding="SAME", name="conv1", activation=self.acf)
 
-        maxpool1 = tf.nn.max_pool(tf.reshape(conv1, [-1, 1, 1024, 16]), ksize=[1, 1, 16, 1], strides=[
-                                  1, 1, 1, 1], padding="SAME", name="maxpool1")
+        maxpool1 = tf.nn.max_pool(tf.reshape(conv1, [-1, 1, self.__frames__, self.__channels__]),
+                                  ksize=[1, 1, 16, 1], strides=[1, 1, 1, 1],
+                                  padding="SAME", name="maxpool1")
 
         reduce1 = tf.reduce_max(maxpool1, axis=[3])
 
@@ -120,7 +139,7 @@ class LearnerModel:
 
         assert len(self.__weights__) == len(self.__biases__)
 
-        prev_layer = tf.reshape(result1, [-1, 1024])
+        prev_layer = tf.reshape(result1, [-1, self.__frames__])
         for i in range(len(self.__weights__)):
             prev_layer = self.acf(
                 tf.matmul(prev_layer, self.__weights__[i]) + self.__biases__[i])
@@ -151,7 +170,11 @@ class LearnerModel:
         saver.save(self.sess, file, global_step=self.global_step)
 
     def get_global_steps(self) -> int:
-        """Gets the number of global steps currently in the session."""
+        """
+        Gets the number of global steps currently in the session.
+        Returns:
+            int: the number of global steps performed
+        """
         return self.sess.run(self.global_step)
 
     def predict(self, batch: np.array):
