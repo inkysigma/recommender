@@ -1,0 +1,38 @@
+[recommender]
+# storage can take the value of either database or file
+storage=database
+sigmoid=False
+dropout=True
+unscaled=True
+
+[file]
+# use an csv for storing files. is discouraged.
+batches=
+train=
+test=
+info=
+results=
+
+[rmdb]
+# a database to store the batches and general information
+engine=postgres
+username=
+password=
+database=
+host=
+port=
+
+[hadoop]
+# a storage for the results of the model
+username=
+password=
+host=
+port=
+
+[spotify]
+# the spotify account information
+id=
+secret=
+
+[logging]
+log_level=2

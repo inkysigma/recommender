@@ -8,4 +8,4 @@ dist/**
 build/**
 recommender.egg-info/**
 
-*.ini
+config.ini
