@@ -2,7 +2,8 @@
 from recommender.collector.music import Track
 from typing import List, Dict
 import spotipy
-import uuid
+import spotipy.oauth2
+import numpy as np
 
 
 class Collector:
@@ -54,7 +55,7 @@ class SpotifyCollector(Collector):
         self.__categories__ = self.spotify.categories()["categories"]["items"]
         return self.__categories__
 
-    def __get_genre__(self, track_id) -> List[str]:
+    def __get_genres__(self, track_id) -> List[str]:
         pass
 
     def get_track_list(self, count: int = 100, skip: int = 0) -> Dict[str, List[Track]]:
@@ -68,20 +69,25 @@ class SpotifyCollector(Collector):
         if self.__categories__ is []:
             self.get_categories()
         tracks = {}
-        for categorey in self.__categories__:
-            playlist_id = categorey["id"]
-            owner = categorey["owner"]
+        for category in self.__categories__:
+            playlist_id = category["id"]
+            owner = category["owner"]
             owner_id = owner["id"]
             tracks = self.spotify.user_playlist(owner_id, playlist_id)["items"]
-            tracks[categorey["id"]] = []
+            tracks[category["id"]] = []
             for track in tracks:
-                tracks[categorey["id"]].append(Track(
-                    tid = track["track"]["id"],
-                    url = track["track"]["href"],
-                    title = track["track"]["name"]
+                tracks[category["id"]].append(Track(
+                    track_id=track["track"]["id"],
+                    url=track["track"]["href"],
+                    title=track["track"]["name"],
+                    genres_list=self.__get_genres__(track["track"]["id"]),
+                    category_list=[category["name"]]
                 ))
 
         return tracks
 
-    def get_track(self, title: str):
+    def get_tracks(self, track: List[Track]) -> np.ndarray:
+        pass
+
+    def get_track_info(self, title: str):
         pass

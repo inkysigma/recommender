@@ -1,30 +1,29 @@
 """Entry point of recommender application"""
 import argparse
+import configparser
+from recommender.train_ops import TrainingFlags, train
 from recommender.learner.model import LearnerModel
+
+PARSER = argparse.ArgumentParser()
 
 
 def configure(*files: str) -> argparse.Namespace:
     """
     Configure the application for usage.
     Returns:
-        argparse.Namspace: the namespace containing the arguments parsed from the command line
+        argparse.Namespace: the namespace containing the arguments parsed from the command line
     namespace"""
-    parser = argparse.ArgumentParser()
 
-    parser.add_argument("--config-file", default="config.ini", action="store")
-    parser.add_argument("--enable-sigmoid", action="store_true")
-    parser.add_argument("--disable-dropout", action="store_false")
+    PARSER.add_argument("--config-file", default="config.ini", action="store")
+    PARSER.set_defaults(group="none")
 
-    learner_parser = parser.add_subparsers(
+    learner_parser = PARSER.add_subparsers(
         help="Select an option to either train/test/predict.")
 
     training_parser = learner_parser.add_parser("train")
     training_parser.set_defaults(group="learner", method="train")
-    training_parser.add_argument("--use-gpu", action="store_true")
     training_parser.add_argument("--disable-noise", action="store_false")
     training_parser.add_argument("--batch-size", default=10, type=int, action="store")
-    training_parser.add_argument("--batch-file", type=str, action="store")
-    training_parser.add_argument("--enable-unscaled", action="store_true")
 
     test_parser = learner_parser.add_parser("test")
     test_parser.set_defaults(group="learner", method="test")
@@ -32,14 +31,19 @@ def configure(*files: str) -> argparse.Namespace:
     predict_parser = learner_parser.add_parser("predict")
     predict_parser.set_defaults(group="learner", method="predict")
 
-    manage_parser = learner_parser.add_parser("manage")
-    manage_parser.set_defaults(group="learner", method="manage")
+    download_parser = learner_parser.add_parser("download")
+    download_parser.set_defaults(group="learner", method="download")
+    download_parser.add_argument("--size", action="store", type=int, default=100)
 
-    namespace = parser.parse_args()
+    batch_parser = learner_parser.add_parser("batch")
+    batch_parser.set_defaults(group="learner", method="batch")
+
+    namespace = PARSER.parse_args()
 
     return namespace
 
-def learner(flags: argparse.Namespace):
+
+def learner(flags: argparse.Namespace, configuration: configparser.ConfigParser):
     """
     Parse the flags in preparation of learning.
     Args:
@@ -47,16 +51,23 @@ def learner(flags: argparse.Namespace):
     """
     if flags.method == "train":
         print("Starting training...")
+        tflags = TrainingFlags(batch_size=flags.batch_size,
+                               noise=not flags.disable_noise)
+        train(tflags, configuration)
         print("Press [Enter] to save the model at the snapshot.")
-
 
 
 def main(flags):
     """
     Initializes several components based on the FLAGS declaration and
     redirects call based on the action called."""
+    print(flags)
+    configuration = configparser.ConfigParser(allow_no_value=True)
+    configuration.read(flags.config_file)
+    if flags.group == "none":
+        PARSER.print_help()
     if flags.group == "learner":
-        learner(flags)
+        learner(flags, configuration)
     pass
 
 

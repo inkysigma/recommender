@@ -1,22 +1,47 @@
-from recommender.learner.model import LearnerModel
+from recommender.collector.collector import Collector
 from recommender import Configuration
+from recommender.learner.model import LearnerModel
+from recommender.collector.batcher import Batcher
+import configparser
+import threading
 
 
-class TrainingConfiguration(Configuration):
+class TrainingFlags(Configuration):
     def __init__(self,
-                 batches,
-                 configuration,
-                 sigmoid,
-                 dropout,
-                 batch_size,
-                 enable_unscaled):
+                 noise,
+                 batch_size):
+        self.batch_size = batch_size
+        self.noise = noise
+
+
+class Trainer(threading.Thread):
+    """
+    A multi-threaded trainer with the learner model.
+    """
+
+    def __init__(self, model: LearnerModel, batches: Batcher, source: Collector, file: str):
+        super(Trainer, self).__init__()
+        self.model = model
         self.batches = batches
-        self.configuration = configuration
-        self.dropout = dropout
-        self.batch_size = batch_size,
-        self.enable_unscaled = enable_unscaled
-        self.sigmoid = sigmoid
+        self.file = file
+        self.is_running = False
+        self.source = source
+
+    def run(self):
+        while (self.is_running):
+            batch = self.batches.get_batches()
+            track = self.source.get_track(batch.data)
+            self.model.train(track, batch.target)
+
+    def start(self):
+        self.is_running = True
+        super(Trainer, self).start()
+
+    def stop(self):
+        self.is_running = False
+        super(Trainer, self).join(10000)
+        self.model.save(file=self.file)
 
 
-def train(config: TrainingConfiguration):
-    model = LearnerModel()
+def train(flags: TrainingFlags, configuration: configparser.ConfigParser) -> Trainer:
+    pass
