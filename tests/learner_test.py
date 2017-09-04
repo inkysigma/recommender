@@ -52,6 +52,7 @@ class TestPredictor(unittest.TestCase):
         self.model.close()
         tf.reset_default_graph()
 
+
 class TestSigmoid(unittest.TestCase):
     def setUp(self):
         self.model = LearnerModel(categories=10, use_sigmoid=True, learning_rate=1.5)
