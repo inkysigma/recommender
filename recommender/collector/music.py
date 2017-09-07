@@ -36,8 +36,8 @@ class Category(SCHEMA_BASE):
     """A category of tracks"""
     __tablename__ = "categories"
     cid = Column(String, primary_key=True)
-    categorey_id = Column(String)
-    name = Column(String)
+    category_id = Column(String)
+    category = Column(String)
     location = Column(String)
     tracks = relationship("Track",
                           secondary=TRACK_CATEGORY_ASSOCIATION,
