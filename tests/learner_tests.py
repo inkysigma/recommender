@@ -77,7 +77,17 @@ class TestSave(unittest.TestCase):
         self.model.initialize()
 
     def test_save(self):
+        print("Testing saving functionality")
+        print(self.model.predict(np.zeros([1, 2048, 32])))
+        self.model.train(np.zeros([800, 2048, 32]), np.zeros([800, 10]))
+        print(self.model.predict(np.zeros([1, 2048, 32])))
+        self.model.save("saved/test.model")
+        self.model.close()
+        tf.reset_default_graph()
         self.model = LearnerModel(categories=10)
+        self.model.build_graph()
+        self.model.load("saved/test.model-0")
+        print(self.model.predict(np.zeros([1, 2048, 32])))
 
     def tearDown(self):
         self.model.close()

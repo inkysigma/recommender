@@ -211,7 +211,7 @@ class LearnerModel:
         Args:
             file (str): the name of the file
         """
-        saver = tf.train.Saver(var_list=tf.trainable_variables())
+        saver = tf.train.Saver()
         saver.save(self.sess, file, global_step=self.global_step)
 
     def get_global_steps(self) -> int:

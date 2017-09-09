@@ -65,6 +65,7 @@ class SpotifyCollector(Collector):
             count (int): the number of tracks to get per categorey.
                 Use get current_offset to get the offset as tracked by this collector.
                 It is recommended to cache this result for later use.
+            skip (int): the number of tracks to skip over.
         """
         if self.__categories__ is []:
             self.get_categories()
@@ -83,7 +84,6 @@ class SpotifyCollector(Collector):
                     genres_list=self.__get_genres__(track["track"]["id"]),
                     category_list=[category["name"]]
                 ))
-
         return tracks
 
     def get_tracks(self, track: List[Track]) -> np.ndarray:
