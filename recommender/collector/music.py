@@ -31,6 +31,10 @@ class Track(SCHEMA_BASE):
     genre_list: List[str] = []
     category_list: List[str] = []
 
+    training_session = relationship("TrainingObservation", back_populates="track")
+    test_session = relationship("TestObservation", back_populates="track")
+    cross_test_session = relationship("CrossTestObservation", back_populates="track")
+
 
 class Category(SCHEMA_BASE):
     """A category of tracks"""
