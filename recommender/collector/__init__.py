@@ -12,8 +12,6 @@ class BASE:
                 and key not in json_exclude}
 
 
-from recommender.collector.music import Track
-
 SCHEMA_BASE = declarative_base(cls=BASE)
 
 
@@ -21,5 +19,6 @@ def initialize_database(engine) -> None:
     """Initialize the sql components with the given engine"""
     SCHEMA_BASE.metadata.bind = engine
     SCHEMA_BASE.metadata.create_all(engine)
+
 
 __all__ = ["music", "learner"]

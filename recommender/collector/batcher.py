@@ -13,6 +13,9 @@ class Batcher:
     def get_batches(self, count: int = 10) -> Batch:
         pass
 
+    def create_batches(self, count: int = 10, offset: int = 0):
+        pass
+
 
 class DatabaseBatcher(Batcher):
     def __init__(self, sess: Session):

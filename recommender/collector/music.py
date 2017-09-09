@@ -1,5 +1,5 @@
 """Declares the models of music such as Tracks and Collections"""
-from sqlalchemy import String, Column, Table, ForeignKey
+from sqlalchemy import String, Column, Table, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from recommender.collector import SCHEMA_BASE
 from typing import List
@@ -27,6 +27,7 @@ class Track(SCHEMA_BASE):
     genres = relationship("Genre",
                           secondary=TRACK_GENRE_ASSOCIATION,
                           back_populates="tracks")
+    last_trained = Column(DateTime)
 
     genre_list: List[str] = []
     category_list: List[str] = []

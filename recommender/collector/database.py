@@ -80,6 +80,12 @@ class RelationalDatabase(Database):
         return self.sess.query(Genre).filter(Genre.genre == gen).one()
 
     def add_category(self, cid: str, cat: str):
+        """
+        Adds a category to the database.
+        Args:
+            cid: the category id
+            cat: the name of the category
+        """
         if self.sess.query(exists().where(Category.category_id == cid or Category.category == cat)).scalar():
             return
         genre = Genre(cid=uuid4().hex,

@@ -6,7 +6,17 @@ env/**
 **/__pycache__/**
 dist/**
 build/**
-saved/**
+**/saved/**
 recommender.egg-info/**
 
 **/*.ini
+.idea/
+.vscode/
+build/
+dist/
+env/
+recommender.egg-info/
+recommender/__pycache__/
+recommender/learner/__pycache__/
+recommender/learner/tools/__pycache__/
+tests/saved/
