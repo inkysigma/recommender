@@ -14,6 +14,8 @@ class BASE:
 
 SCHEMA_BASE = declarative_base(cls=BASE)
 
+from . import music, observation
+
 
 def initialize_database(engine) -> None:
     """Initialize the sql components with the given engine"""
