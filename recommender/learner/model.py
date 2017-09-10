@@ -1,8 +1,9 @@
 """A module for creating training models to train over tracks."""
 from typing import Callable
-from recommender.learner.tools.tensor_utilities import add_tensors
+from recommender.learner.tools.tensor_utilities import add_tensors, create_bias, create_weight
 import tensorflow as tf
 import numpy as np
+import logging
 
 
 class LearnerModel:
@@ -10,13 +11,14 @@ class LearnerModel:
 
     def __init__(self,
                  categories: int,
+                 logger: logging.Logger,
                  activation_function: Callable[[tf.Tensor], tf.Tensor] = tf.nn.relu,
                  beta: float = 0.01,
                  frames: int = 2048,
                  channels: int = 32,
                  dropout: bool = True,
                  use_sigmoid: bool = False,
-                 learning_rate: float=0.05):
+                 learning_rate: float = 0.05):
         """
         Creates a learner with the given activation function and name.
         Args:
@@ -74,6 +76,9 @@ class LearnerModel:
 
         self.__use_sigmoid__ = use_sigmoid
 
+        self.__final_logits__ = None
+        self.__final_regularization__ = None
+
     def __initialize_variables__(self):
         """Initialize the variables needed to multiply matricies and add biases"""
         self.__weights__ = []
@@ -83,45 +88,32 @@ class LearnerModel:
             n *= 2
 
         self.__weights__.append(
-            self.__create_weight__([self.__frames__ // 4, n]))
-        self.__biases__.append(self.__create_bias__([n]))
+            create_weight([self.__frames__ // 4, n]))
+        self.__biases__.append(create_bias([n]))
 
         while n > 1024:
-            self.__weights__.append(self.__create_weight__([n, n // 2]))
-            self.__biases__.append(self.__create_bias__([n // 2]))
+            self.__weights__.append(create_weight([n, n // 2]))
+            self.__biases__.append(create_bias([n // 2]))
             n //= 2
 
         if n < 1024:
-            self.__weights__.append(self.__create_weight__([n, 1024]))
-            self.__biases__.append(self.__create_bias__([1024]))
+            self.__weights__.append(create_weight([n, 1024]))
+            self.__biases__.append(create_bias([1024]))
 
         self.__weights__.extend([
-            self.__create_weight__([1024, 512]),
-            self.__create_weight__([512, 256]),
-            self.__create_weight__([256, 128]),
-            self.__create_weight__([128, 64]),
-            self.__create_weight__([64, 64])
+            create_weight([1024, 512]),
+            create_weight([512, 256]),
+            create_weight([256, 128]),
+            create_weight([128, 64]),
+            create_weight([64, 64])
         ])
         self.__biases__.extend([
-            self.__create_bias__([512]),
-            self.__create_bias__([256]),
-            self.__create_bias__([128]),
-            self.__create_bias__([64]),
-            self.__create_bias__([64])
+            create_bias([512]),
+            create_bias([256]),
+            create_bias([128]),
+            create_bias([64]),
+            create_bias([64])
         ])
-
-    def __create_weight__(self, shape, name: str = None):
-        """
-        Create a weight of the given shape and name
-        Args:
-            shape: an n-dimensional list of integers representing the shape
-            name: the name of the operation to process
-        """
-        return tf.Variable(tf.truncated_normal(shape=shape, stddev=0.1), name=name)
-
-    @staticmethod
-    def __create_bias__(shape, name: str = None):
-        return tf.Variable(tf.constant(0.2, shape=shape), name=name)
 
     def train(self, batch, y):
         """
@@ -134,7 +126,6 @@ class LearnerModel:
         """
         if not self.__graph_built__:
             self.build_graph()
-        error = None
         if not self.__use_sigmoid__:
             error = tf.nn.softmax_cross_entropy_with_logits(
                 labels=self.y, logits=self.__final_logits__
@@ -179,6 +170,8 @@ class LearnerModel:
 
         if self.__dropout__:
             dropout1 = tf.nn.dropout(reduce1, keep_prob=0.4)
+        else:
+            dropout1 = reduce1
 
         result1 = self.acf(dropout1)
 
@@ -189,9 +182,9 @@ class LearnerModel:
             prev_layer = self.acf(
                 tf.matmul(prev_layer, self.__weights__[i]) + self.__biases__[i])
 
-        final_weight = self.__create_weight__(
+        final_weight = create_weight(
             [64, self.__categories__], name="final_weight")
-        final_biases = self.__create_bias__(
+        final_biases = create_bias(
             [self.__categories__], name="final_bias")
 
         self.__final_logits__ = tf.matmul(
