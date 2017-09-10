@@ -1,6 +1,6 @@
 """A module representing a collector of training data."""
 from recommender.collector.music import Track
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import spotipy
 import spotipy.oauth2
 import numpy as np
@@ -8,6 +8,7 @@ import urllib.request
 import mimetypes
 import librosa
 import os
+import urllib.parse
 
 
 class Collector:
@@ -49,7 +50,7 @@ class Collector:
     def get_category_offset(self, category: str) -> Dict[str, int]:
         pass
 
-    def fetch_track_sample(self, track: List[Track]) -> List[(np.array, List[int])]:
+    def fetch_track_sample(self, track: List[Track]) -> List[Tuple[np.array, List[int]]]:
         pass
 
 
@@ -71,6 +72,8 @@ class SpotifyCollector(Collector):
         self.__categories__ = []
         self.__genres__ = []
         self.__tempdir__ = tempdir
+        if not os.path.exists(self.__tempdir__):
+            os.makedirs(self.__tempdir__)
 
     def __get_genres__(self, track: object) -> List[str]:
         if not self.__genres__:
@@ -148,19 +151,29 @@ class SpotifyCollector(Collector):
 
         return tracks
 
-    def fetch_track_sample(self, tracks: List[Track]) -> List[(np.array, List[int])]:
-        tracks = []
+    def fetch_track_sample(self, tracks: List[Track]) -> List[Tuple[Track, str]]:
+        """
+        Download track samples for the tracks
+        Args:
+            tracks (List[Track]): a list of tracks to download
+
+        Returns:
+            List[str]: a list of strings representing the files downloaded in the order given
+        """
+        samples = []
+        chunk_size = 16 * 1024
         for track in tracks:
-            response = urllib.request.urlopen(track.url)
+            response = urllib.request.urlopen(track.url.decode("ASCII"))
             ext = mimetypes.guess_extension(response.headers["content-type"])
-            file_name = f"{os.path.join(self.__tempdir__,track.title)}.{ext}"
-            file = open(file_name, "wb")
-            file.write(response.read())
-            data, sr = librosa.load(file_name)
+            file_name = f"{os.path.join(self.__tempdir__,track.track_id)}.{ext}"
+            with open(file_name, "wb+") as f:
+                chunk = response.read(chunk_size)
+                while chunk:
+                    f.write(chunk)
+                    chunk = response.read(chunk_size)
+            samples.append((track, file_name))
 
-            tracks.append((data, sr))
-
-        return tracks
+        return samples
 
     def get_category_offset(self, category: str) -> Dict[str, int]:
         pass

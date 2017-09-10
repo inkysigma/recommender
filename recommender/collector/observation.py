@@ -7,34 +7,38 @@ class TrainingObservation(SCHEMA_BASE):
     """
     An observation for training data with a given session ID.
     """
+    __tablename__ = "training_observations"
     id = Column(String, primary_key=True)
     session = Column(String)
     track = relationship("Track")
-    track_id = ForeignKey(String, "tracks.id")
+    track_id = Column(String, ForeignKey("tracks.track_id"))
 
 
 class TestObservation(SCHEMA_BASE):
     """
-    An observation for training data with a given session ID.
+    An observation for test data with a given session ID.
     """
+    __tablename__ = "test_observations"
     id = Column(String, primary_key=True)
     session = Column(String)
     track = relationship("Track")
-    track_id = ForeignKey(String, "tracks.id")
+    track_id = Column(String, ForeignKey("tracks.track_id"))
 
 
 class CrossTestObservation(SCHEMA_BASE):
     """
-    An observation for training data with a given session ID.
+    An observation for cross test data with a given session ID.
     """
+    __tablename__ = "cross_test_observation"
     id = Column(String, primary_key=True)
     session = Column(String)
     track = relationship("Track")
-    track_id = ForeignKey(String, "tracks.id")
+    track_id = Column(String, ForeignKey("tracks.track_id"))
 
 
-class SessionIds(SCHEMA_BASE):
+class BatchSessions(SCHEMA_BASE):
     """
     A list of session IDs.
     """
+    __tablename__ = "batch_sessions"
     id = Column(String, primary_key=True)

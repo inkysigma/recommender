@@ -27,6 +27,7 @@ class Track(SCHEMA_BASE):
     genres = relationship("Genre",
                           secondary=TRACK_GENRE_ASSOCIATION,
                           back_populates="tracks")
+
     last_trained = Column(DateTime)
 
     genre_list: List[str] = []
