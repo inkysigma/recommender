@@ -26,7 +26,7 @@ def list_to_sparse(mapping: List[str], targets: List[str], consistent=True) -> L
     Maps a list of targets to a SpareTensor based on a list.
     Args:
         mapping (List[str]): a map of all possible targets of the sparse tensor.
-        tagets (List[str]): a list of the targets which will be converted to tensors
+        targets (List[str]): a list of the targets which will be converted to tensors
         consistent (bool): whether or not the map is already in order.
             If true, the map will not be pre-sorted. It is recommended to sort in order
             to preserve order between mappings
@@ -59,7 +59,7 @@ def concat_sp_tensors_1D(tensors: List[tf.Tensor]) -> tf.Tensor:
     return tf.sparse_concat(sp_inputs=tensors, axis=0)
 
 
-def create_weight(shape, deviation: float, name: str = None) -> tf.Variable:
+def create_weight(shape, deviation: float = 0.1, name: str = None) -> tf.Variable:
     """
     Create a TensorFlow weight with the provided shape. The weight
     is trainable and uses a truncated_normal generation of values.
