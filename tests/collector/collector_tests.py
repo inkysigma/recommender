@@ -1,4 +1,5 @@
 from recommender.collector.collector import SpotifyCollector
+from recommender.collector.music import Track
 import unittest
 import configparser
 import json
@@ -17,7 +18,8 @@ class SpotifyCollectorTest(unittest.TestCase):
             config.read("../test.ini")
         self.collector = SpotifyCollector(config.get("spotify", "client_id"), config.get("spotify", "client_secret"),
                                           "tmp")
-        self.target_file = open(os.path.join(os.path.dirname(__file__), "targets/spotify_collection_targets.json"), "r+")
+        self.target_file = open(os.path.join(os.path.dirname(__file__), "targets/spotify_collection_targets.json"),
+                                "r+")
         self.targets = json.load(self.target_file)
 
     def test_get_genre(self):
