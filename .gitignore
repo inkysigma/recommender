@@ -15,6 +15,7 @@ recommender.egg-info/**
 build/
 dist/
 env/
+tmp/
 recommender.egg-info/
 recommender/__pycache__/
 recommender/learner/__pycache__/
