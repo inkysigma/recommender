@@ -41,3 +41,5 @@ def create_targets(targets: List[str], mapping: List[str], consistent=True) -> n
     """
     mapping_ = sorted(mapping) if consistent else mapping
 
+def create_batch(data: List[Track, List[str]]):
+    pass
