@@ -2,7 +2,9 @@
 from recommender.collector.music import Track, Category, Genre
 from sqlalchemy.orm.session import Session
 from sqlalchemy import exists
+from typing import List
 from uuid import uuid4
+import logging
 
 
 class Database:
@@ -41,7 +43,7 @@ class Database:
 
 
 class RelationalDatabase(Database):
-    def __init__(self, sess: Session):
+    def __init__(self, sess: Session, logger: logging.Logger):
         self.sess = sess
 
     def add_genre(self, gid: str, gen: str):
@@ -100,6 +102,9 @@ class RelationalDatabase(Database):
 
     def get_category(self, cat: str) -> Category:
         return self.sess.query(Category).filter(Category.category == cat).one()
+
+    def get_all_category(self) -> List[Category]:
+        return self.sess.query(Category).all()
 
     def save_track(self, track: Track):
         """

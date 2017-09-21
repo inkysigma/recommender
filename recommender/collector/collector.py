@@ -18,6 +18,10 @@ class Collector:
         """Gets a list of categories given by the resource."""
         pass
 
+    def get_category_name(self, cat: str):
+        """Get the category name based on the category id"""
+        pass
+
     def get_genre_list(self) -> List[str]:
         pass
 
@@ -51,6 +55,9 @@ class Collector:
         pass
 
     def fetch_track_sample(self, track: List[Track]) -> List[Tuple[np.array, List[int]]]:
+        pass
+
+    def get_genre_name(self, gen: str) -> str:
         pass
 
 
@@ -94,6 +101,14 @@ class SpotifyCollector(Collector):
         self.__genres__ = self.spotify.recommendation_genre_seeds()["genres"]
         return self.__genres__
 
+    def get_genre_name(self, gen: str) -> str:
+        if not self.__genres__:
+            self.get_genre_list()
+        for genre in self.__genres__:
+            if genre["id"] == gen:
+                return genre["name"]
+        return ""
+
     def get_category_list(self) -> List[str]:
         """
         Get a list of categories from Spotify.
@@ -109,6 +124,22 @@ class SpotifyCollector(Collector):
                 count += len(categories["categories"]["items"])
                 categories = self.spotify.categories(limit=20, offset=count)
         return [category["id"] for category in self.__categories__]
+
+    def get_category_name(self, cat: str) -> str:
+        """
+        Gets the name of a category based on an id
+        Args:
+            cat: the id of the category as given by the resource.
+
+        Returns:
+            str: the name of the category
+        """
+        if not self.__categories__:
+            self.get_category_list()
+        for category in self.__categories__:
+            if category["id"] == cat:
+                return category["name"]
+        return ""
 
     def get_track_list(self, count: int = 100, skip: int = 0) -> Dict[str, List[Track]]:
         if not self.__categories__:
@@ -127,6 +158,8 @@ class SpotifyCollector(Collector):
                 # Skip the playlist if we have already covered it
                 if skip_count < skip and skip_count + remote["total"] < skip:
                     skip_count += remote["total"]
+
+                    list_count += 1
                     continue
 
                 tracks[category["id"]] = []
