@@ -12,6 +12,7 @@ class LearnerModel:
     def __init__(self,
                  categories: int,
                  logger: logging.Logger,
+                 summary: tf.summary.FileWriter = None,
                  activation_function: Callable[[tf.Tensor], tf.Tensor] = tf.nn.relu,
                  beta: float = 0.01,
                  frames: int = 2048,
@@ -24,8 +25,8 @@ class LearnerModel:
         Args:
             activation_function (Callable[tf.Tensor, None]): an activation function
                 for the network. default is tf.ReLu
-            name (str): the name of the learner
-                default is track-learner
+            logger (logging.Logger): the logger to use to track changes
+            summary (tf.summary.FileWriter): the file writer to save TensorFlow summaries
             categories (int): the number of target categories
             beta (float): the regularization constant
             frames (int): the number of frames in each track
@@ -34,6 +35,8 @@ class LearnerModel:
             dropout (bool): whether to enable the dropout layer
             use_sigmoid (bool): use sigmoid read out instead of SoftMax
         """
+        self.__summary_writer__ = summary
+
         self.__learning_rate__ = learning_rate
         self.acf = activation_function
 
@@ -78,6 +81,8 @@ class LearnerModel:
 
         self.__final_logits__ = None
         self.__final_regularization__ = None
+
+        self.__logger__ = logger
 
     def __initialize_variables__(self):
         """Initialize the variables needed to multiply matricies and add biases"""
@@ -144,8 +149,9 @@ class LearnerModel:
         train_step.run(feed_dict={self.input: batch,
                                   self.y: y}, session=self.sess)
 
-    def test(self, batch, y):
-        pass
+    def test(self, batch, y) -> float:
+        prediction = self.predict(batch)
+        return tf.nn.l2_loss(batch, y)
 
     def load(self, file: str):
         """

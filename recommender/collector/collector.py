@@ -198,7 +198,7 @@ class SpotifyCollector(Collector):
         for track in tracks:
             response = urllib.request.urlopen(track.url.decode("ASCII"))
             ext = mimetypes.guess_extension(response.headers["content-type"])
-            file_name = f"{os.path.join(self.__tempdir__,track.track_id)}.{ext}"
+            file_name = f"{os.path.join(self.__tempdir__,track.track_id)}{ext}"
             with open(file_name, "wb+") as f:
                 chunk = response.read(chunk_size)
                 while chunk:

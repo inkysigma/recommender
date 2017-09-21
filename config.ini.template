@@ -22,8 +22,9 @@ database=
 host=
 port=
 
-[hadoop]
+[multipoints]
 # a storage for the results of the model
+storage=file
 username=
 password=
 host=

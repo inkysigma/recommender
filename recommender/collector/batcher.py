@@ -2,6 +2,7 @@ from sqlalchemy.orm.session import Session
 import recommender.collector.music as music
 import recommender.collector.observation as obs
 from typing import List
+import uuid
 
 
 class Batcher:
@@ -14,10 +15,7 @@ class Batcher:
     def get_cross_test_batches(self, count: int = 10) -> List[(music.Track, List[str])]:
         pass
 
-    def create_batches(self, training_count: int, test_count: int, cross_test_count: int):
-        pass
-
-    def create_batches(self, count: int = 10, offset: int = 0):
+    def create_batches(self, starting_index: int, training_count: int, test_count: int, cross_test_count: int):
         pass
 
 
@@ -63,5 +61,26 @@ class DatabaseBatcher(Batcher):
                 [item.genre for item in t.track.genres])))
         return queries
 
-    def create_batches(self, training_count: int, test_count: int, cross_test_count: int):
-        pass
+    def create_batches(self, starting_index: int, training_count: int, test_count: int, cross_test_count: int) -> str:
+        tracks = self.__sess__.query(music.Track) \
+            .order_by(music.Track.track_id) \
+            .skip(music.Track.track_id) \
+            .limit(training_count + test_count + cross_test_count) \
+            .all()
+        session = uuid.uuid4().hex
+        self.__sess__.bulk_save_objects([
+            obs.TrainingObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=session)
+            for i in range(0, min(len(tracks), training_count))
+        ])
+        self.__sess__.bulk_save_objects([
+            obs.TestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=session)
+            for i in range(training_count, min(len(tracks), training_count + test_count))
+        ])
+        self.__sess__.bulk_save_objects([
+            obs.CrossTestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=session)
+            for i in range(training_count + test_count, min(len(tracks), training_count + test_count + cross_test_count))
+        ])
+        self.__sess__.add(obs.BatchSessions(id=session))
+        return session
+
+    pass

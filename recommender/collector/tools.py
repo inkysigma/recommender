@@ -1,18 +1,17 @@
 """Tools for converting the collected data into useful models"""
-from typing import Tuple, List
-from recommender.collector.music import Track
+from typing import Tuple, List, Dict
 import librosa
 import numpy as np
 
 
-def mfcc(track: np.ndarray, n_mfcc=32) -> np.ndarray:
+def mfcc(track: np.array, sr=25200, n_mfcc=32) -> np.ndarray:
     """
     Construct an MFCC to get a represention of the track.
     """
-    return librosa.feature.spectral.mfcc(track, n_mfcc=n_mfcc)
+    return librosa.feature.spectral.mfcc(track, sr=sr, n_mfcc=n_mfcc)
 
 
-def load_track_sample(file_name: str, sample_rate: int = 22050, duration: int = 30) -> np.array:
+def load_track_sample(file_name: str, sample_rate: int = 22050, duration: int = 30) -> (np.array, int):
     """
     Load a track based on a filename into a numpy array of signals.
     Use mfcc to convert the return value into a mel-cepstrum spectrogram.
@@ -27,17 +26,34 @@ def load_track_sample(file_name: str, sample_rate: int = 22050, duration: int = 
     return librosa.load(file_name, sr=sample_rate, duration=duration)
 
 
-def create_targets(targets: List[str], mapping: List[str], consistent=True) -> np.array:
+def create_target(targets: List[str], mapping: Dict[str, int]) -> np.array:
     """
     Convert a list of strings to a sparse np.array based on a mapping
     Args:
         targets: the targets to map
         mapping: the mapping from the targets to the place in the array
-        consistent: whether or not to sort the mapping. Turn off if already sorted
 
     Returns:
         np.array: an array representing the targets as a sparse array to be used
             in the model
     """
-    mapping_ = sorted(mapping) if consistent else mapping
+    target = np.zeros((len(mapping)))
 
+    for value in targets:
+        target[mapping[value]] = 1
+
+    return np.array(target)
+
+
+def create_batch(data: List[Tuple[List[str], str]], mapping: List[str], consistent=True) -> (
+        np.ndarray, np.ndarray):
+    mapping_ = {value: key
+                for key, value in enumerate(sorted(mapping) if consistent else mapping)}
+    track_spectrograms = []
+    track_targets = []
+    for targets, file in data:
+        track_targets.append(create_target(targets, mapping_))
+        t, sr = load_track_sample(file)
+        track_spectrograms.append(mfcc(t, sr=sr))
+
+    return np.vstack(track_spectrograms), np.vstack(track_targets)
