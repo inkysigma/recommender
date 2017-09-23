@@ -1,0 +1,1 @@
+from recommender.collector.batcher import DatabaseBatcher
