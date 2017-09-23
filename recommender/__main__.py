@@ -1,8 +1,8 @@
 """Entry point of recommender application"""
 import argparse
 import configparser
-from recommender.train_ops import TrainingFlags, train
-from recommender.learner.model import LearnerModel
+from recommender.train_ops import TrainingConfiguration, train
+from recommender.download_ops import download
 
 PARSER = argparse.ArgumentParser()
 
@@ -51,10 +51,16 @@ def learner(flags: argparse.Namespace, configuration: configparser.ConfigParser)
     """
     if flags.method == "train":
         print("Starting training...")
-        tflags = TrainingFlags(batch_size=flags.batch_size,
-                               noise=not flags.disable_noise)
+        tflags = TrainingConfiguration(batch_size=flags.batch_size,
+                                       noise=not flags.disable_noise)
         train(tflags, configuration)
-        print("Press [Enter] to save the model at the snapshot.")
+
+    if flags.method == "download":
+        print("Starting to download based on configuration...")
+        download(flags, configuration)
+
+    if flags.method == "batch":
+        print("Starting to create some batches")
 
 
 def main(flags):

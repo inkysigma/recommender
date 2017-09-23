@@ -1,7 +1,7 @@
 """A module for describing how the music tracks are cached and saved."""
 from recommender.collector.music import Track, Category, Genre
 from sqlalchemy.orm.session import Session
-from sqlalchemy import exists
+from sqlalchemy import exists, func
 from typing import List
 from uuid import uuid4
 import logging
@@ -41,10 +41,14 @@ class Database:
     def get_genre(self, gen: str) -> Genre:
         pass
 
+    def get_all_genre(self) -> List[Genre]:
+        pass
+
 
 class RelationalDatabase(Database):
     def __init__(self, sess: Session, logger: logging.Logger):
         self.sess = sess
+        self.logging = logger
 
     def add_genre(self, gid: str, gen: str):
         """
@@ -137,3 +141,12 @@ class RelationalDatabase(Database):
 
     def get_track(self, tid: str) -> Track:
         return self.sess.query(Track).filter(Track.track_id == tid).one()
+
+    def get_all_genre(self) -> List[Genre]:
+        return self.sess.query(Genre).all()
+
+    def genre_size(self) -> int:
+        return self.sess.query(func.count(Genre.genre_id)).scalar()
+
+    def category_size(self) -> int:
+        return self.sess.query(func.count(Category.genre_id)).scalar()

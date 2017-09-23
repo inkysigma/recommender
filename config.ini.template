@@ -4,6 +4,16 @@ storage=database
 sigmoid=False
 dropout=True
 unscaled=True
+session_file=sessions/default.ini
+
+
+[download]
+# download size configuration
+count=1000
+skip=0
+
+# used the cached categories
+use_cached=False
 
 [file]
 # use an csv for storing files. is discouraged.
@@ -37,3 +47,6 @@ secret=
 
 [logging]
 log_level=2
+database=database.log
+manager=download.log
+learner_model=learner.log

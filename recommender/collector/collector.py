@@ -64,12 +64,13 @@ class Collector:
 class SpotifyCollector(Collector):
     """Collects song from Spotify"""
 
-    def __init__(self, cid: str, csecret: str, tempdir: str):
+    def __init__(self, cid: str, csecret: str, tempdir: str = os.curdir):
         """
         Create a SpotifyCollector with the parameters
         Args:
             cid (str): the client id. It is obtained from the Spotify Developer Console
             csecret (str): the client secret. It is obtained from the Spotify Developer Console
+            tempdir (str): the directory to download songs to.
         """
         self.credential = spotipy.oauth2.SpotifyClientCredentials(
             client_id=cid,
@@ -195,6 +196,7 @@ class SpotifyCollector(Collector):
         """
         samples = []
         chunk_size = 16 * 1024
+
         for track in tracks:
             response = urllib.request.urlopen(track.url.decode("ASCII"))
             ext = mimetypes.guess_extension(response.headers["content-type"])
