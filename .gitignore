@@ -21,3 +21,4 @@ recommender/__pycache__/
 recommender/learner/__pycache__/
 recommender/learner/tools/__pycache__/
 tests/learner/saved/
+tests/saved/
