@@ -1,1 +1,1 @@
-from recommender.collector.batcher import DatabaseBatcher
+from recommender.collector.batch_manager import DatabaseBatchManager
