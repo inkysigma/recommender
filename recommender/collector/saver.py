@@ -32,19 +32,21 @@ class FileSaver(Saver):
         else:
             self.__f__ = open(filename, "r+")
 
-    def save_results(self, tid: List[str], result: np.ndarray) -> None:
+    def save_results(self, tids: List[str], result: np.ndarray) -> None:
         """
         Save a result to a file for storage. Highly inefficient.
         Args:
-            tid (str): the id of the array
+            tids (str): the id of the array
             result (np.ndarray): the array to be stored
         """
         m, _ = result.shape
-        assert len(tid) == m
+        assert len(tids) == m
         self.__f__.seek(0, 0)
 
-        arrays = np.split(result, len(tid))
-        d = dict(zip(tid, result))
+        arrays = np.split(result, len(tids))
+        d = dict(zip(tids, result))
+
+        self.__logger__.info(f"saved {', '.join([i for i in tid])} to file")
 
         lines = []
 
@@ -70,12 +72,16 @@ class FileSaver(Saver):
         assert len(tid) == m
         self.__f__.seek(0, io.SEEK_END)
         arrays = np.split(result, len(tid))
+
+        self.__logger__.info(f"appended {', '.join([i for i in tid])} to file")
+
         for i in range(0, len(tid)):
             arrstr = np.array_str(arrays[i], max_line_width=1000, precision=24, suppress_small=True)
             self.__f__.write(f"{tid[i]}:{arrstr}\n")
         self.__f__.seek(0, 0)
 
     def condense_file(self):
+        self.__logger__.info("condensing result file")
         lines = {}
         self.__f__.seek(0, 0)
         for line in self.__f__:

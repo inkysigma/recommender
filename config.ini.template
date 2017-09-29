@@ -50,3 +50,5 @@ log_level=2
 database=database.log
 manager=download.log
 learner_model=learner.log
+saver=saver.log
+operation=operation.log

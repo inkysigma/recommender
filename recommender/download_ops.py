@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from typing import List, Dict
 from recommender.collector.database import RelationalDatabase
 from recommender.collector.collector import SpotifyCollector
 from sqlalchemy.orm.session import Session
@@ -24,7 +23,7 @@ class DownloadConfiguration:
         self.use_cached = use_cached
 
 
-class DownloadManager:
+class DownloadOperator:
     """
     A manager for downloading tracks.
     """
@@ -43,17 +42,17 @@ class DownloadManager:
         """
         collector = SpotifyCollector(config.spotify_id,
                                      config.spotify_secret)
-        self.logger.log(2, "Starting to download tracks.")
+        self.logger.info("Starting to download tracks.")
         if not config.use_cached:
             categories = collector.get_category_list()
             genres = collector.get_genre_list()
             for category in categories:
-                self.logger.log(2, f"Added category: {collector.get_category_name(category)}")
+                self.logger.info(f"Added category: {collector.get_category_name(category)}")
                 self.database.add_category(category, collector.get_category_name(category))
             for genre in genres:
-                self.logger.log(2, f"Added genre: {genre}")
+                self.logger.info(f"Added genre: {genre}")
                 self.database.add_genre(genre, genre)
-        maps = collector.get_track_list(config.training_count, config.skip)
+        maps = collector.get_track_list(config.count, config.skip)
         for cat, tracks in maps:
             for track in tracks:
                 self.database.save_track(track)
@@ -79,13 +78,7 @@ def download(flags: argparse.Namespace, configuration: configparser.ConfigParser
                 os.makedirs(os.path.dirname(database_logging_file))
         logging.getLogger("database").addHandler(logging.FileHandler(database_logging_file, mode="a+"))
 
-    manager_logging_file = configuration.get("logging", "manager")
-    if manager_logging_file:
-        if not os.path.exists(manager_logging_file):
-            if not os.path.exists(os.path.dirname(manager_logging_file)):
-                os.makedirs(os.path.dirname(manager_logging_file))
-        logging.getLogger("download_manager").addHandler(logging.FileHandler(manager_logging_file, mode="a+"))
-    manager = DownloadManager(sess, logging.getLogger("download_manager"))
+    manager = DownloadOperator(sess, logging.getLogger("download_manager"))
 
     download_config = DownloadConfiguration(
         int(configuration.get("download", "count")),

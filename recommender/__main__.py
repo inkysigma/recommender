@@ -3,6 +3,7 @@ import argparse
 import configparser
 from recommender.train_ops import TrainingConfiguration, train
 from recommender.download_ops import download
+from recommender.logging.configure import configure
 
 PARSER = argparse.ArgumentParser()
 
@@ -49,11 +50,10 @@ def learner(flags: argparse.Namespace, configuration: configparser.ConfigParser)
     Args:
         flags: the flags to parse for learning
     """
+    configure(flags, configuration)
     if flags.method == "train":
         print("Starting training...")
-        tflags = TrainingConfiguration(batch_size=flags.batch_size,
-                                       noise=not flags.disable_noise)
-        train(tflags, configuration)
+        train(flags, configuration)
 
     if flags.method == "download":
         print("Starting to download based on configuration...")

@@ -1,7 +1,7 @@
 """A module for describing how the music tracks are cached and saved."""
 from recommender.collector.music import Track, Category, Genre
 from sqlalchemy.orm.session import Session
-from sqlalchemy import exists, func
+from sqlalchemy import exists, func, and_
 from typing import List
 from uuid import uuid4
 import logging
@@ -44,6 +44,9 @@ class Database:
     def get_all_genre(self) -> List[Genre]:
         pass
 
+    def get_all_category(self) -> List[Category]:
+        pass
+
 
 class RelationalDatabase(Database):
     def __init__(self, sess: Session, logger: logging.Logger):
@@ -60,6 +63,7 @@ class RelationalDatabase(Database):
         """
         if self.sess.query(exists().where(Genre.genre_id == gid or Genre.genre == gen)).scalar():
             return
+        self.logging.info(f"adding genre: {gen} with id {gid}")
         genre = Genre(gid=uuid4().hex,
                       genre_id=gid,
                       genre=gen)
@@ -72,6 +76,7 @@ class RelationalDatabase(Database):
         Args:
             gid (str): the id of the genre as represented by the remote source.
         """
+        self.logging.info(f"removing genre: {gid}")
         self.sess.query(Genre).filter(Genre.genre_id == gid).delete()
         self.sess.commit()
 
@@ -83,6 +88,7 @@ class RelationalDatabase(Database):
         Returns:
             a genre representing the asked genre.
         """
+        self.logging.log(15, f"getting genre: {gen}")
         return self.sess.query(Genre).filter(Genre.genre == gen).one()
 
     def add_category(self, cid: str, cat: str):
@@ -92,6 +98,7 @@ class RelationalDatabase(Database):
             cid: the category id
             cat: the name of the category
         """
+        self.logging.info(f"adding category: {cat} with it {cid}")
         if self.sess.query(exists().where(Category.category_id == cid or Category.category == cat)).scalar():
             return
         genre = Genre(cid=uuid4().hex,
@@ -101,13 +108,16 @@ class RelationalDatabase(Database):
         self.sess.commit()
 
     def remove_category(self, cid: str):
+        self.logging.info(f"removing category: {cid}")
         self.sess.query(Category).filter(Category.category_id == cid).delete()
         self.sess.commit()
 
     def get_category(self, cat: str) -> Category:
+        self.logging.log(15, f"getting category: {cat}")
         return self.sess.query(Category).filter(Category.category == cat).one()
 
     def get_all_category(self) -> List[Category]:
+        self.logging.info(f"getting all categories")
         return self.sess.query(Category).all()
 
     def save_track(self, track: Track):
@@ -118,35 +128,55 @@ class RelationalDatabase(Database):
         Args:
             track: the track to add to the database
         """
-        if track.track_id is not None:
+        if track.internal_id is not None:
+            self.logging.info(f"updated track: {track.track_id} for {track.title}")
             self.sess.query(Track).filter(Track.track_id == track.track_id).update(track)
+        elif self.sess.query(self.sess.exists()
+                                     .where(and_(Track.title == track.title,
+                                                 Track.artist == track.artist,
+                                                 Track.url == track.url))) \
+                .scalar():
+
+            self.logging.info(f"updated track w/o id: {track.title} by {track.artist}")
+            self.sess.query(Track).filter(and_(Track.title == track.title,
+                                               Track.artist == track.artist,
+                                               Track.url == track.url)).update(track)
         else:
+            self.logging.info(f"added track: {track.title} by {track.artist}")
             if track.category_list is not None:
                 for category in track.category_list:
                     track.categories.append(self.get_category(category))
             if track.genre_list is not None:
                 for genre in track.genre_list:
                     track.genres.append(self.get_genre(genre))
+            track.internal_id = uuid4().hex
             self.sess.add(track)
         self.sess.commit()
 
     def remove_track(self, tid: str):
+        self.logging.info(f"removing track: {tid}")
         self.sess.query(Track).filter(Track.track_id == tid).delete()
 
     def update_track(self, tid: str, track: Track):
+        self.logging.info(f"update track: {tid}")
         self.sess.query(Track).filter(Track.track_id == tid).update(track)
 
     def list_tracks(self, count: int = 100, skip: int = 0):
+        self.logging.info("listing tracks")
         return self.sess.query(Track).order_by(Track.track_id).skip(skip).limit(100).all()
 
     def get_track(self, tid: str) -> Track:
+        self.logging.info(f"getting track: {tid}")
         return self.sess.query(Track).filter(Track.track_id == tid).one()
 
     def get_all_genre(self) -> List[Genre]:
+        self.logging.info("getting all genres")
         return self.sess.query(Genre).all()
 
     def genre_size(self) -> int:
+        self.logging.info("getting size of all genres")
         return self.sess.query(func.count(Genre.genre_id)).scalar()
 
     def category_size(self) -> int:
+        self.logging.info("getting size of all genres")
         return self.sess.query(func.count(Category.genre_id)).scalar()

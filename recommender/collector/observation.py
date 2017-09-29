@@ -1,4 +1,4 @@
-from sqlalchemy import String, Column, ForeignKey
+from sqlalchemy import String, Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 from recommender.collector import SCHEMA_BASE
 
@@ -41,4 +41,8 @@ class BatchSessions(SCHEMA_BASE):
     A list of session IDs.
     """
     __tablename__ = "batch_sessions"
-    id = Column(String, primary_key=True)
+    batch_id = Column(String, primary_key=True)
+    # the number of skips for each category
+    skip = Column(Integer)
+    # the number of songs from each category
+    count = Column(Integer)

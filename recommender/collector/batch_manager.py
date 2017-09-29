@@ -3,9 +3,19 @@ import recommender.collector.music as music
 import recommender.collector.observation as obs
 from typing import List
 import uuid
+import logging
 
 
 class BatchManager:
+    def reset_session(self):
+        pass
+
+    def generate_session(self):
+        pass
+
+    def get_session(self) -> str:
+        pass
+
     def get_training_batches(self, count: int = 10, skip: int = 0) -> List[(music.Track, List[str])]:
         pass
 
@@ -18,11 +28,26 @@ class BatchManager:
     def create_batches(self, starting_index: int, training_count: int, test_count: int, cross_test_count: int):
         pass
 
+    def list_sessions(self) -> List[str]:
+        pass
+
 
 class DatabaseBatchManager(BatchManager):
-    def __init__(self, sess: Session, session_id: str = None):
+    def __init__(self, sess: Session, logger: logging.Logger, session_id: str = None):
         self.__sess__ = sess
+        self.__logging__ = logger
         self.__id__ = session_id
+        self.__generated__ = False
+
+    def get_session(self) -> str:
+        return self.__id__
+
+    def reset_session(self):
+        self.__id__ = None
+
+    def generate_session(self):
+        self.__id__ = uuid.uuid4().hex
+        self.__generated__ = True
 
     def get_training_batches(self, count: int = 10, skip: int = 0) -> List[(music.Track, List[str])]:
         """
@@ -134,26 +159,32 @@ class DatabaseBatchManager(BatchManager):
         if len(tracks) < training_count + test_count + cross_test_count:
             return ""
 
-        if not self.__id__:
-            self.__id__ = uuid.uuid4().hex
-            generated = True
-        else:
-            generated = False
+        if self.__generated__:
+            if self.__id__ is None:
+                self.__id__ = uuid.uuid4().hex
+            self.__sess__.add(obs.BatchSessions(id=self.__id__,
+                                                skip=starting_index,
+                                                count=training_count + test_count + cross_test_count))
 
         self.__sess__.bulk_save_objects([
-            obs.TrainingObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=self.__id__)
+            obs.TrainingObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i],
+                                    session=self.__id__)
             for i in range(0, min(len(tracks), training_count))
         ])
+
         self.__sess__.bulk_save_objects([
             obs.TestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=self.__id__)
             for i in range(training_count, min(len(tracks), training_count + test_count))
         ])
         self.__sess__.bulk_save_objects([
-            obs.CrossTestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=self.__id__)
+            obs.CrossTestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i],
+                                     session=self.__id__)
             for i in
             range(training_count + test_count, min(len(tracks), training_count + test_count + cross_test_count))
         ])
-        if generated:
-            self.__sess__.add(obs.BatchSessions(id=self.__id__))
+
         self.__sess__.commit()
         return self.__id__
+
+    def list_sessions(self) -> List[str]:
+        return [sess.id for sess in self.__sess__.query(obs.BatchSessions).all()]
