@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from recommender.collector.database import RelationalDatabase
+from recommender.collector.music_manager import RelationalDatabase
 from recommender.collector.collector import SpotifyCollector
 from sqlalchemy.orm.session import Session
 import configparser
@@ -15,9 +15,11 @@ class DownloadConfiguration:
                  skip: int,
                  spotify_id: str,
                  spotify_secret: str,
-                 use_cached: bool = True):
+                 use_cached: bool = True,
+                 all: bool = False):
         self.count = count
         self.skip = skip
+        self.all = all
         self.spotify_id = spotify_id
         self.spotify_secret = spotify_secret
         self.use_cached = use_cached
@@ -43,6 +45,7 @@ class DownloadOperator:
         collector = SpotifyCollector(config.spotify_id,
                                      config.spotify_secret)
         self.logger.info("Starting to download tracks.")
+
         if not config.use_cached:
             categories = collector.get_category_list()
             genres = collector.get_genre_list()
@@ -52,7 +55,8 @@ class DownloadOperator:
             for genre in genres:
                 self.logger.info(f"Added genre: {genre}")
                 self.database.add_genre(genre, genre)
-        maps = collector.get_track_list(config.count, config.skip)
+        cats = self.database.get_all_category()
+        maps = collector.fetch_tracks(cats, self.database.exists_track, config.count, config.skip, config.all)
         for cat, tracks in maps:
             for track in tracks:
                 self.database.save_track(track)
@@ -85,6 +89,7 @@ def download(flags: argparse.Namespace, configuration: configparser.ConfigParser
         int(configuration.get("download", "skip")),
         configuration.get("spotify", "id"),
         configuration.get("spotify", "secret"),
-        configuration.getboolean("download", "use_cached")
+        configuration.getboolean("download", "use_cached"),
+        all=configuration.getboolean("download", "all", fallback=False)
     )
     manager.load_tracks(download_config)

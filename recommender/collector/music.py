@@ -1,5 +1,5 @@
 """Declares the models of music such as Tracks and Collections"""
-from sqlalchemy import String, Column, Table, ForeignKey, DateTime
+from sqlalchemy import String, Column, Table, ForeignKey, DateTime, Integer
 from sqlalchemy.orm import relationship
 from recommender.collector import SCHEMA_BASE
 from typing import List
@@ -17,12 +17,14 @@ TRACK_GENRE_ASSOCIATION = Table("track_genre_association", SCHEMA_BASE.metadata,
 class Track(SCHEMA_BASE):
     """A track representing a song that can be collected"""
     __tablename__ = "tracks"
-    internal_id = Column(String)
+    internal_id = Column(String, primary_key=True)
+    internal_count = Column(Integer, index=True)
 
-    track_id = Column(String, primary_key=True)
+    track_id = Column(String)
     url = Column(String)
     title = Column(String)
     artist = Column(String)
+
     categories = relationship("Category",
                               secondary=TRACK_CATEGORY_ASSOCIATION,
                               back_populates="tracks")
@@ -49,7 +51,12 @@ class Track(SCHEMA_BASE):
 class Category(SCHEMA_BASE):
     """A category of tracks"""
     __tablename__ = "categories"
+
+    """
+    The internal id of the category
+    """
     cid = Column(String, primary_key=True)
+
     category_id = Column(String)
     category = Column(String)
     location = Column(String)
@@ -62,6 +69,7 @@ class Genre(SCHEMA_BASE):
     """Genre for a music"""
     __tablename__ = "genres"
     gid = Column(String, primary_key=True)
+
     genre_id = Column(String)
     genre = Column(String)
     tracks = relationship("Track",

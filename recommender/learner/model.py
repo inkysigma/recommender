@@ -93,7 +93,7 @@ class LearnerModel:
             n *= 2
 
         self.__weights__.append(
-            create_weight([self.__frames__ // 4, n]))
+            create_weight([self.__frames__ // 16, n]))
         self.__biases__.append(create_bias([n]))
 
         while n > 1024:
@@ -172,18 +172,27 @@ class LearnerModel:
                                   ksize=[1, 1, 16, 1], strides=[1, 1, 4, 1],
                                   padding="SAME", name="maxpool1")
 
-        reduce1 = tf.reduce_max(maxpool1, axis=[3])
+        reshape1 = tf.reshape(maxpool1, [-1, self.__frames__ // 4, self.__channels__])
+
+        conv2 = tf.layers.conv1d(reshape1, filters=32, strides=1, kernel_size=4,
+                                 padding="SAME", name="conv2", activation=self.acf)
+
+        maxpool2 = tf.nn.max_pool(tf.reshape(conv2, [-1, 1, self.__frames__ // 4, self.__channels__]),
+                                  ksize=[1, 1, 16, 1], strides=[1, 1, 4, 1],
+                                  padding="SAME", name="maxpool2")
+
+        reduce2 = tf.reduce_max(maxpool2, axis=[3])
 
         if self.__dropout__:
-            dropout1 = tf.nn.dropout(reduce1, keep_prob=0.4)
+            dropout1 = tf.nn.dropout(reduce2, keep_prob=0.4)
         else:
-            dropout1 = reduce1
+            dropout1 = reduce2
 
         result1 = self.acf(dropout1)
 
         assert len(self.__weights__) == len(self.__biases__)
 
-        prev_layer = tf.reshape(result1, [-1, self.__frames__ // 4])
+        prev_layer = tf.reshape(result1, [-1, self.__frames__ // 16])
         for i in range(len(self.__weights__)):
             prev_layer = self.acf(
                 tf.matmul(prev_layer, self.__weights__[i]) + self.__biases__[i])
@@ -196,8 +205,8 @@ class LearnerModel:
         self.__final_logits__ = tf.matmul(
             prev_layer, final_weight) + final_biases
 
-        self.__final_regularization__ = tf.nn.l2_loss(final_weight) \
-                                        + add_tensors([tf.nn.l2_loss(w) for w in self.__weights__])
+        self.__final_regularization__ = tf.nn.l2_loss(final_weight) + add_tensors(
+            [tf.nn.l2_loss(w) for w in self.__weights__])
         self.__graph_built__ = True
 
     def initialize(self):

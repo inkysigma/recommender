@@ -15,7 +15,7 @@ def __create_log__(file: str, name: str):
     """
     if file:
         if not os.path.exists(file):
-            if not os.path.exists(os.path.dirname(file)):
+            if not os.path.exists(os.path.dirname(file)) and os.path.dirname(file) != '':
                 os.makedirs(os.path.dirname(file))
         logger = logging.getLogger(name)
         logger.addHandler(logging.FileHandler(file, mode="a+").setFormatter(LOG_FORMATTER))

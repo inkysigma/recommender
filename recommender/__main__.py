@@ -1,25 +1,28 @@
 """Entry point of recommender application"""
 import argparse
 import configparser
-from recommender.train_ops import TrainingConfiguration, train
+import os
+from recommender.train_ops import train
 from recommender.download_ops import download
-from recommender.logging.configure import configure
+from recommender.logger.configure import configure as configure_logging
 
 PARSER = argparse.ArgumentParser()
 
 
-def configure(*files: str) -> argparse.Namespace:
+def configure() -> argparse.Namespace:
     """
     Configure the application for usage.
     Returns:
         argparse.Namespace: the namespace containing the arguments parsed from the command line
-    namespace"""
+    namespace
+    """
 
     PARSER.add_argument("--config-file", default="config.ini", action="store")
     PARSER.set_defaults(group="none")
 
     learner_parser = PARSER.add_subparsers(
-        help="Select an option to either train/test/predict.")
+        help="Select an option to either train/test/predict."
+    )
 
     training_parser = learner_parser.add_parser("train")
     training_parser.set_defaults(group="learner", method="train")
@@ -32,12 +35,12 @@ def configure(*files: str) -> argparse.Namespace:
     predict_parser = learner_parser.add_parser("predict")
     predict_parser.set_defaults(group="learner", method="predict")
 
-    download_parser = learner_parser.add_parser("download")
-    download_parser.set_defaults(group="learner", method="download")
-    download_parser.add_argument("--size", action="store", type=int, default=100)
-
     batch_parser = learner_parser.add_parser("batch")
     batch_parser.set_defaults(group="learner", method="batch")
+
+    download_parser = learner_parser.add_parser("download")
+    download_parser.set_defaults(group="database", method="download")
+    download_parser.add_argument("--size", action="store", type=int, default=100)
 
     namespace = PARSER.parse_args()
 
@@ -49,18 +52,20 @@ def learner(flags: argparse.Namespace, configuration: configparser.ConfigParser)
     Parse the flags in preparation of learning.
     Args:
         flags: the flags to parse for learning
+        configuration: the configuration given by the config file
     """
-    configure(flags, configuration)
     if flags.method == "train":
         print("Starting training...")
         train(flags, configuration)
 
+    if flags.method == "batch":
+        print("Starting to create some batches...")
+
+
+def database(flags: argparse.Namespace, configuration: configparser.ConfigParser):
     if flags.method == "download":
         print("Starting to download based on configuration...")
         download(flags, configuration)
-
-    if flags.method == "batch":
-        print("Starting to create some batches")
 
 
 def main(flags):
@@ -69,12 +74,15 @@ def main(flags):
     redirects call based on the action called."""
     print(flags)
     configuration = configparser.ConfigParser(allow_no_value=True)
-    configuration.read(flags.config_file)
+    configuration.read_file(open(flags.config_file, "r"))
+
+    configure_logging(flags, configuration)
     if flags.group == "none":
         PARSER.print_help()
     if flags.group == "learner":
         learner(flags, configuration)
-    pass
+    if flags.group == "database":
+        database(flags, configuration)
 
 
 if __name__ == "__main__":

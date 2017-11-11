@@ -23,6 +23,9 @@ class Database:
     def get_track(self, tid: str):
         pass
 
+    def exists_track(self, tid: str):
+        pass
+
     def add_category(self, cid: str, cat: str):
         pass
 
@@ -32,7 +35,13 @@ class Database:
     def get_category(self, cat: str) -> Category:
         pass
 
+    def fetch_category(self, cid: str) -> Category:
+        pass
+
     def add_genre(self, gid: str, gen: str):
+        pass
+
+    def fetch_genre(self, gid: str) -> Genre:
         pass
 
     def remove_genre(self, gid: str):
@@ -80,6 +89,18 @@ class RelationalDatabase(Database):
         self.sess.query(Genre).filter(Genre.genre_id == gid).delete()
         self.sess.commit()
 
+    def fetch_genre(self, gid: str):
+        """
+        Gets a genre object based on the internal id used
+        Args:
+            gid (str): the internal id
+
+        Returns:
+            Genre: a genre object
+        """
+        self.logging.info(f"fetching genre: {gid}")
+        return self.sess.query(Genre).filter(Genre.gid == gid).one()
+
     def get_genre(self, gen: str) -> Genre:
         """
         Gets a genre with the specified label
@@ -112,6 +133,10 @@ class RelationalDatabase(Database):
         self.sess.query(Category).filter(Category.category_id == cid).delete()
         self.sess.commit()
 
+    def fetch_category(self, cid: str):
+        self.logging.info(f"getting category: {cid}")
+        return self.sess.query(Category).filter(Category.cid == cid).one()
+
     def get_category(self, cat: str) -> Category:
         self.logging.log(15, f"getting category: {cat}")
         return self.sess.query(Category).filter(Category.category == cat).one()
@@ -131,10 +156,9 @@ class RelationalDatabase(Database):
         if track.internal_id is not None:
             self.logging.info(f"updated track: {track.track_id} for {track.title}")
             self.sess.query(Track).filter(Track.track_id == track.track_id).update(track)
-        elif self.sess.query(self.sess.exists()
-                                     .where(and_(Track.title == track.title,
-                                                 Track.artist == track.artist,
-                                                 Track.url == track.url))) \
+        elif self.sess.query(self.sess.query(exists().where(and_(Track.title == track.title,
+                                                           Track.artist == track.artist,
+                                                           Track.url == track.url)).exists()).scalar()) \
                 .scalar():
 
             self.logging.info(f"updated track w/o id: {track.title} by {track.artist}")
@@ -145,10 +169,14 @@ class RelationalDatabase(Database):
             self.logging.info(f"added track: {track.title} by {track.artist}")
             if track.category_list is not None:
                 for category in track.category_list:
-                    track.categories.append(self.get_category(category))
+                    cat = self.fetch_category(category)
+                    track.categories.append(cat)
+                    cat.tracks.append(track)
             if track.genre_list is not None:
                 for genre in track.genre_list:
-                    track.genres.append(self.get_genre(genre))
+                    gen = self.fetch_genre(genre)
+                    track.genres.append(gen)
+                    gen.tracks.append(track)
             track.internal_id = uuid4().hex
             self.sess.add(track)
         self.sess.commit()

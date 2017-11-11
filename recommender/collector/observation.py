@@ -42,7 +42,5 @@ class BatchSessions(SCHEMA_BASE):
     """
     __tablename__ = "batch_sessions"
     batch_id = Column(String, primary_key=True)
-    # the number of skips for each category
-    skip = Column(Integer)
     # the number of songs from each category
     count = Column(Integer)

@@ -31,7 +31,7 @@ class SpotifyCollectorTest(unittest.TestCase):
         self.assertListEqual(categories, self.targets["categories"])
 
     def test_get_track_list(self):
-        tracks = self.collector.get_track_list(count=1, skip=0)
+        tracks = self.collector.fetch_tracks(count=1, skip=0)
         self.assertEquals(len(tracks), 32)
 
     def tearDown(self):

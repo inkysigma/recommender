@@ -5,6 +5,12 @@ sigmoid=False
 dropout=True
 unscaled=True
 session_file=sessions/default.ini
+cache_directory=tmp/
+
+[init]
+training_count=200
+test_count=50
+cross_test_count=50
 
 
 [download]
@@ -14,14 +20,6 @@ skip=0
 
 # used the cached categories
 use_cached=False
-
-[file]
-# use an csv for storing files. is discouraged.
-batches=
-train=
-test=
-info=
-results=
 
 [rmdb]
 # a database to store the batches and general information

@@ -2,6 +2,7 @@
 import unittest
 import tensorflow as tf
 import numpy as np
+import logging
 from recommender.learner.model import LearnerModel
 
 
@@ -9,7 +10,7 @@ class TestLearner(unittest.TestCase):
     """A collection of tests against the model to ensure it works"""
 
     def setUp(self):
-        self.model = LearnerModel(categories=10)
+        self.model = LearnerModel(categories=10, logger=logging.getLogger("test"))
 
     def test_build(self):
         """Test whether the graph can be built correctly"""
@@ -22,7 +23,7 @@ class TestLearner(unittest.TestCase):
 
 class TestPredictor(unittest.TestCase):
     def setUp(self):
-        self.model = LearnerModel(categories=10, learning_rate=0.01, beta=0.005)
+        self.model = LearnerModel(categories=10, learning_rate=0.01, logger=logging.getLogger("test"), beta=0.005)
         self.model.build_graph()
         self.model.initialize()
 
@@ -55,7 +56,7 @@ class TestPredictor(unittest.TestCase):
 
 class TestSigmoid(unittest.TestCase):
     def setUp(self):
-        self.model = LearnerModel(categories=10, use_sigmoid=True, learning_rate=1.5)
+        self.model = LearnerModel(categories=10, use_sigmoid=True, learning_rate=1.5, logger=logging.getLogger("test"))
         self.model.build_graph()
         self.model.initialize()
         print("Testing sigmoid functionality")
@@ -72,7 +73,7 @@ class TestSigmoid(unittest.TestCase):
 
 class TestSave(unittest.TestCase):
     def setUp(self):
-        self.model = LearnerModel(categories=10)
+        self.model = LearnerModel(categories=10, logger=logging.getLogger("test"))
         self.model.build_graph()
         self.model.initialize()
 
@@ -84,7 +85,7 @@ class TestSave(unittest.TestCase):
         self.model.save("saved/test.model")
         self.model.close()
         tf.reset_default_graph()
-        self.model = LearnerModel(categories=10)
+        self.model = LearnerModel(categories=10, logger=logging.getLogger("test"))
         self.model.build_graph()
         self.model.load("saved/test.model-0")
         print(self.model.predict(np.zeros([1, 2048, 32])))
