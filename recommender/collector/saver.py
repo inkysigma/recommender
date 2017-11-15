@@ -1,9 +1,9 @@
-from typing import List, Dict
 import fileinput
 import numpy as np
 import io
 import logging
 import os
+from typing import List, Dict
 
 
 class Saver:

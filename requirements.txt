@@ -23,7 +23,6 @@ plaster-pastedeploy==0.4.1
 protobuf==3.4.0
 pylint==1.7.2
 pyramid==1.9.1
--e git+https://github.com/inkysigma/recommender.git@d84e8ca58ac94088a0e2903ff27d6ea50f8417a2#egg=recommender
 repoze.lru==0.6
 requests==2.18.4
 resampy==0.1.5

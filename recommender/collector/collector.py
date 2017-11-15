@@ -1,12 +1,12 @@
 """A module representing a collector of training data."""
-from recommender.collector.music import Track, Category
-from typing import List, Dict, Tuple, Callable
 import spotipy
 import spotipy.oauth2
 import urllib.request
 import mimetypes
 import os
 import urllib.parse
+from recommender.collector.music import Track, Category
+from typing import List, Dict, Tuple, Callable
 
 
 class Collector:
@@ -23,6 +23,7 @@ class Collector:
         pass
 
     def get_genre_list(self) -> List[str]:
+        """Get a list of possible genres"""
         pass
 
     def fetch_tracks(self, categories: List[str], added: Callable[[str], bool], count: int = 100, skip: int = 0) -> \
@@ -55,9 +56,11 @@ class Collector:
         pass
 
     def get_category_offset(self, category: str) -> Dict[str, int]:
+        """Get the category offset"""
         pass
 
-    def fetch_track_sample(self, directory: str, track: List[Track]) -> List[Tuple[Track, str]]:
+    def fetch_track_sample(self, directory: str,
+                           track: List[Track]) -> List[Tuple[Track, str]]:
         pass
 
     def get_genre_name(self, gen: str) -> str:
@@ -69,7 +72,7 @@ class SpotifyCollector(Collector):
     A class for populating the track database with tracks from Spotify
     """
 
-    def __init__(self, spotify_id: str, spotify_secret: str):
+    def __init__(self, spotify_id: str, spotify_secret: str) -> None:
         """
         Create a SpotifyCollector with the parameters
         Args:
@@ -83,8 +86,8 @@ class SpotifyCollector(Collector):
         self.spotify = spotipy.Spotify(
             client_credentials_manager=self.credential
         )
-        self.__categories__ = []
-        self.__genres__ = []
+        self.__categories__: List[object] = []
+        self.__genres__: List[object] = []
 
     def __get_genres__(self, track: object) -> List[str]:
         if not self.__genres__:
@@ -145,6 +148,9 @@ class SpotifyCollector(Collector):
                 return category["name"]
         return ""
 
+    def fetch_playlist(self, playlist_id: str, skip: int=0, count: int=0, download_all: bool = False) -> None:
+        pass
+
     def fetch_tracks(self, categories: List[Category], added: Callable[[str], bool], count: int = 100, skip: int = 0,
                      download_all: bool = False) -> Dict[str, List[Track]]:
         """
@@ -163,37 +169,43 @@ class SpotifyCollector(Collector):
         """
         if not self.__categories__:
             self.get_category_list()
-        tracks = dict()
+        tracks: Dict[str, List[Track]] = dict()
 
         track_count = 0
         skip_count = 0
 
         for category in categories:
-            playlists = self.spotify.category_playlists(category_id=category.category_id)["playlists"]
+            playlists = self.spotify.category_playlists(
+                category_id=category.category_id)["playlists"]
 
             for playlist in playlists["items"]:
                 owner = playlist["owner"]
                 owner_id = owner["id"]
-                while track_count < count and not download_all:
-                    remote = self.spotify.user_playlist_tracks(owner_id, playlist["id"], offset=track_count)
+                while track_count < count or download_all:
+                    remote = self.spotify.user_playlist_tracks(
+                        owner_id, playlist["id"], offset=track_count)
 
                     # Skip the playlist if we are going to skip over it
-                    if skip_count < skip and skip_count + remote["total"] < skip:
+                    if skip_count < skip and skip_count + \
+                            remote["total"] < skip:
                         skip_count += remote["total"]
                         continue
 
                     tracks[category.cid] = []
-                    for index, track in enumerate(remote["items"]["tracks"], start=skip - skip_count):
-                        if track["track"]["preview_url"] is None or added(track["track"]["id"]):
+                    for _, track in enumerate(
+                            remote["items"]["tracks"], start=skip - skip_count):
+                        if track["track"]["preview_url"] is None or added(
+                                track["track"]["id"]):
                             continue
-                        t = Track(
+                        downloaded_track = Track(
                             track_id=track["track"]["id"],
                             title=track["track"]["name"],
                             url=track["track"]["preview_url"]
                         )
-                        t.genre_list = self.__get_genres__(track)
-                        t.category_list = [category.category]
-                        tracks[category.cid].append(t)
+                        downloaded_track.genre_list = self.__get_genres__(
+                            track)
+                        downloaded_track.category_list = [category.category]
+                        tracks[category.cid].append(downloaded_track)
                         track_count = track_count + 1
 
                         if track_count >= count:
@@ -205,7 +217,8 @@ class SpotifyCollector(Collector):
 
         return tracks
 
-    def fetch_track_sample(self, directory: str, tracks: List[Track]) -> List[Tuple[Track, str]]:
+    def fetch_track_sample(self, directory: str,
+                           tracks: List[Track]) -> List[Tuple[Track, str]]:
         """
         Download track samples for the tracks
         Args:

@@ -16,7 +16,7 @@ class DownloadConfiguration:
                  spotify_id: str,
                  spotify_secret: str,
                  use_cached: bool = True,
-                 all: bool = False):
+                 all: bool = False) -> None:
         self.count = count
         self.skip = skip
         self.all = all
@@ -30,12 +30,12 @@ class DownloadOperator:
     A manager for downloading tracks.
     """
 
-    def __init__(self, sess: Session, logger: logging.Logger):
+    def __init__(self, sess: Session, logger: logging.Logger) -> None:
         self.sess = sess
         self.database = RelationalDatabase(self.sess, logging.getLogger("download_database"))
         self.logger = logger
 
-    def load_tracks(self, config: DownloadConfiguration):
+    def load_tracks(self, config: DownloadConfiguration) -> None:
         """
         Load tracks into the database and their targets
         Args:
@@ -62,7 +62,7 @@ class DownloadOperator:
                 self.database.save_track(track)
 
 
-def download(flags: argparse.Namespace, configuration: configparser.ConfigParser):
+def download(flags: argparse.Namespace, configuration: configparser.ConfigParser) -> None:
     driver = configuration.get("rmdb", "engine")
     host = configuration.get("rmdb", "host")
     port = configuration.get("rmdb", "port")
@@ -75,14 +75,7 @@ def download(flags: argparse.Namespace, configuration: configparser.ConfigParser
     session.configure(bind=engine)
     sess = session()
 
-    database_logging_file = configuration.get("logging", "database")
-    if database_logging_file:
-        if not os.path.exists(database_logging_file):
-            if not os.path.exists(os.path.dirname(database_logging_file)):
-                os.makedirs(os.path.dirname(database_logging_file))
-        logging.getLogger("database").addHandler(logging.FileHandler(database_logging_file, mode="a+"))
-
-    manager = DownloadOperator(sess, logging.getLogger("download_manager"))
+    manager = DownloadOperator(sess, logging.getLogger("manager"))
 
     download_config = DownloadConfiguration(
         int(configuration.get("download", "count")),

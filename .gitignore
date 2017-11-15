@@ -1,7 +1,7 @@
 .vscode/**
 .idea/**
 env/**
-
+.mypy_cache/**
 
 **/__pycache__/**
 dist/**
@@ -22,3 +22,5 @@ recommender/learner/__pycache__/
 recommender/learner/tools/__pycache__/
 tests/learner/saved/
 tests/saved/
+
+**/*.log

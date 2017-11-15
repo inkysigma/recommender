@@ -1,36 +1,42 @@
-from sqlalchemy.orm.session import Session
-import recommender.collector.observation as obs
-from . import music
-from typing import List, Tuple
+"""A module for managing batches of sessions"""
 import uuid
 import logging
+import recommender.collector.observation as obs
+from sqlalchemy.orm.session import Session
+from . import music
+from typing import List, Tuple
 
 
 class BatchManager:
-    def get_training_batches(self, batch_id: str, count: int = 10, skip: int = 0) -> List[Tuple[music.Track, List[str]]]:
+    def get_training_batches(self, batch_id: str, count: int = 10, skip: int = 0) \
+            -> List[Tuple[music.Track, List[str]]]:
         pass
 
-    def get_test_batches(self, batch_id: str, count: int = 10, skip: int = 0) -> List[Tuple[music.Track, List[str]]]:
+    def get_test_batches(self, batch_id: str, count: int = 10, skip: int = 0) \
+            -> List[Tuple[music.Track, List[str]]]:
         pass
 
-    def get_cross_test_batches(self, batch_id: str, count: int = 10, skip: int = 0) -> List[Tuple[music.Track, List[str]]]:
+    def get_cross_test_batches(self, batch_id: str, count: int = 10, skip: int = 0) \
+            -> List[Tuple[music.Track, List[str]]]:
         pass
 
-    def create_batches(self, training_count: int, test_count: int, cross_test_count: int, skip: int = 0):
+    def create_batches(self, training_count: int, test_count: int,
+                       cross_test_count: int, skip: int = 0):
         pass
 
-    def extend_batches(self, batch_id: str, training_count: int, test_count: int, cross_test_count: int, skip: int = 0):
+    def extend_batches(self, batch_id: str, training_count: int,
+                       test_count: int, cross_test_count: int, skip: int = 0):
         pass
 
     def list_sessions(self) -> List[str]:
         pass
 
-    def get_session(self, batch_id: str) -> (int, int, int):
+    def get_session(self, batch_id: str) -> Tuple[int, int, int]:
         pass
 
 
 class DatabaseBatchManager(BatchManager):
-    def __init__(self, sess: Session, logger: logging.Logger):
+    def __init__(self, sess: Session, logger: logging.Logger) -> None:
         self.__sess__ = sess
         self.__logging__ = logger
         self.__generated__ = False
@@ -63,8 +69,9 @@ class DatabaseBatchManager(BatchManager):
             .all()
 
         for t in tracks:
-            queries.append((t.track, [item.category for item in t.track.categories].extend(
-                [item.genre for item in t.track.genres])))
+            categories = [item.category for item in t.track.categories]
+            categories.extend([item.genre for item in t.track.genres])
+            queries.append((t.track, categories))
         return queries
 
     def get_test_batches(self, batch_id: str, count: int = 10, skip: int = 0) -> List[Tuple[music.Track, List[str]]]:
@@ -155,12 +162,14 @@ class DatabaseBatchManager(BatchManager):
                                             count=training_count + test_count + cross_test_count))
 
         self.__sess__.bulk_save_objects([
-            obs.TrainingObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
+            obs.TrainingObservation(id=uuid.uuid4(
+            ).hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
             for i in range(0, min(len(tracks), training_count))
         ])
 
         self.__sess__.bulk_save_objects([
-            obs.TestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
+            obs.TestObservation(id=uuid.uuid4(
+            ).hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
             for i in range(training_count, min(len(tracks), training_count + test_count))
         ])
 
@@ -168,7 +177,8 @@ class DatabaseBatchManager(BatchManager):
             obs.CrossTestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i],
                                      session=batch_id)
             for i in
-            range(training_count + test_count, min(len(tracks), training_count + test_count + cross_test_count))
+            range(training_count + test_count, min(len(tracks),
+                                                   training_count + test_count + cross_test_count))
         ])
 
         self.__sess__.commit()
@@ -206,12 +216,14 @@ class DatabaseBatchManager(BatchManager):
                                             count=training_count + test_count + cross_test_count))
 
         self.__sess__.bulk_save_objects([
-            obs.TrainingObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
+            obs.TrainingObservation(id=uuid.uuid4(
+            ).hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
             for i in range(0, min(len(tracks), training_count))
         ])
 
         self.__sess__.bulk_save_objects([
-            obs.TestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
+            obs.TestObservation(id=uuid.uuid4(
+            ).hex, track_id=tracks[i].track_id, track=tracks[i], session=batch_id)
             for i in range(training_count, min(len(tracks), training_count + test_count))
         ])
 
@@ -219,7 +231,8 @@ class DatabaseBatchManager(BatchManager):
             obs.CrossTestObservation(id=uuid.uuid4().hex, track_id=tracks[i].track_id, track=tracks[i],
                                      session=batch_id)
             for i in
-            range(training_count + test_count, min(len(tracks), training_count + test_count + cross_test_count))
+            range(training_count + test_count, min(len(tracks),
+                                                   training_count + test_count + cross_test_count))
         ])
 
         batch.count += training_count + test_count + cross_test_count
@@ -252,7 +265,10 @@ class DatabaseBatchManager(BatchManager):
             raise ValueError("batch_id was not created")
 
         return (
-            self.__sess__.query(obs.TrainingObservation).filter(obs.TrainingObservation.session == batch_id).count(),
-            self.__sess__.query(obs.TrainingObservation).filter(obs.TestObservation.session == batch_id).count(),
-            self.__sess__.query(obs.CrossTestObservation).filter(obs.CrossTestObservation.session == batch_id).count()
+            self.__sess__.query(obs.TrainingObservation).filter(
+                obs.TrainingObservation.session == batch_id).count(),
+            self.__sess__.query(obs.TrainingObservation).filter(
+                obs.TestObservation.session == batch_id).count(),
+            self.__sess__.query(obs.CrossTestObservation).filter(
+                obs.CrossTestObservation.session == batch_id).count()
         )

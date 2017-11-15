@@ -68,13 +68,16 @@ def database(flags: argparse.Namespace, configuration: configparser.ConfigParser
         download(flags, configuration)
 
 
-def main(flags):
+def main(flags: argparse.Namespace):
     """
     Initializes several components based on the FLAGS declaration and
     redirects call based on the action called."""
-    print(flags)
+    namespace = vars(flags)
     configuration = configparser.ConfigParser(allow_no_value=True)
-    configuration.read_file(open(flags.config_file, "r"))
+    if not os.path.exists(namespace["config_file"]):
+        print("Please create a configuration file")
+        return
+    configuration.read_file(open(namespace["config_file"], "r"))
 
     configure_logging(flags, configuration)
     if flags.group == "none":
