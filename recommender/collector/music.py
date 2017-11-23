@@ -57,6 +57,9 @@ class Category(SCHEMA_BASE):
     """
     cid = Column(String, primary_key=True)
 
+    """
+    The remote id of the category to be used
+    """
     category_id = Column(String)
     category = Column(String)
     location = Column(String)

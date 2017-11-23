@@ -4,7 +4,7 @@ import configparser
 import os
 from recommender.train_ops import train
 from recommender.download_ops import download
-from recommender.logger.configure import configure as configure_logging
+from recommender.configuration.logging import configure as configure_logging
 
 PARSER = argparse.ArgumentParser()
 

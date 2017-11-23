@@ -16,10 +16,10 @@ class DownloadConfiguration:
                  spotify_id: str,
                  spotify_secret: str,
                  use_cached: bool = True,
-                 all: bool = False) -> None:
+                 download_all: bool = False) -> None:
         self.count = count
         self.skip = skip
-        self.all = all
+        self.all = download_all
         self.spotify_id = spotify_id
         self.spotify_secret = spotify_secret
         self.use_cached = use_cached
@@ -83,6 +83,6 @@ def download(flags: argparse.Namespace, configuration: configparser.ConfigParser
         configuration.get("spotify", "id"),
         configuration.get("spotify", "secret"),
         configuration.getboolean("download", "use_cached"),
-        all=configuration.getboolean("download", "all", fallback=False)
+        download_all=configuration.getboolean("download", "all", fallback=False)
     )
     manager.load_tracks(download_config)
