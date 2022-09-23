@@ -20,7 +20,7 @@ numpy==1.13.3
 PasteDeploy==1.5.2
 plaster==0.5
 plaster-pastedeploy==0.4.1
-protobuf==3.4.0
+protobuf==3.18.3
 pylint==1.7.2
 pyramid==1.9.1
 repoze.lru==0.6
